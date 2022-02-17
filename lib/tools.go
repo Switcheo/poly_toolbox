@@ -205,18 +205,9 @@ func CreateCommitDposTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -299,18 +290,9 @@ func CreateUpdateConfigTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -750,18 +732,9 @@ func CreateSyncOntGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -808,18 +781,9 @@ func CreateSyncEthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -870,18 +834,9 @@ func CreateSyncMscGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -948,18 +903,9 @@ func CreateSyncBscGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -998,18 +944,9 @@ func CreateSyncRawGenesisHdrTxToPolyTx(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -1048,18 +985,9 @@ func CreateSyncOkGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -1120,18 +1048,9 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -1183,18 +1102,9 @@ func CreateSyncNeoGenesisHdrTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	str, err := cmd.Flags().GetString(ConsensusPubKeys)
-	pks := strings.Split(str, ",")
+	pubKeys, err := GetConsensusPublicKeys(cmd)
 	if err != nil {
 		return err
-	}
-	pubKeys := make([]keypair.PublicKey, 0, len(pks))
-	for i, v := range pks {
-		pk, err := vconfig.Pubkey(v)
-		if err != nil {
-			return fmt.Errorf("failed to get no%d pubkey: %v", i, err)
-		}
-		pubKeys = append(pubKeys, pk)
 	}
 
 	tx.Sigs = append(tx.Sigs, types.Sig{
@@ -1217,7 +1127,6 @@ func SignPolyMultiSigTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	acc := accs[0]
 
 	tx := &types.Transaction{}
 	raw, err := hex.DecodeString(args[0])
@@ -1228,8 +1137,10 @@ func SignPolyMultiSigTx(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err = poly.MultiSignToTransaction(tx, tx.Sigs[0].M, tx.Sigs[0].PubKeys, acc); err != nil {
-		return fmt.Errorf("multi sign failed, err: %s", err)
+	for _, acc := range accs {
+		if err = poly.MultiSignToTransaction(tx, tx.Sigs[0].M, tx.Sigs[0].PubKeys, acc); err != nil {
+			return fmt.Errorf("multi sign failed, err: %s", err)
+		}
 	}
 
 	sink := common.NewZeroCopySink(nil)
@@ -1443,4 +1354,34 @@ func ApproveRemoveStateValidator(cmd *cobra.Command, args []string) error {
 	wg.Wait()
 
 	return nil
+}
+
+func GetConsensusPublicKeys(cmd *cobra.Command) (pubKeys []keypair.PublicKey, err error) {
+	str, err := cmd.Flags().GetString(ConsensusPubKeys)
+	if str == "" {
+		_, accs, e := GetPolyAndAccsByCmd(cmd)
+		if e != nil {
+			err = e
+			return
+		}
+		pubKeys = make([]keypair.PublicKey, 0, len(accs))
+		for _, acc := range accs {
+			pubKeys = append(pubKeys, acc.PublicKey)
+		}
+		return
+	} else {
+		pks := strings.Split(str, ",")
+		if err != nil {
+			return
+		}
+		pubKeys = make([]keypair.PublicKey, 0, len(pks))
+		for i, v := range pks {
+			pk, err := vconfig.Pubkey(v)
+			if err != nil {
+				return pubKeys, fmt.Errorf("failed to get no%d pubkey: %v", i, err)
+			}
+			pubKeys = append(pubKeys, pk)
+		}
+	}
+	return
 }
