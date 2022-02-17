@@ -131,13 +131,13 @@ func WaitPolyTx(txhash common.Uint256, poly *poly_go_sdk.PolySdk) {
 	}
 }
 
-func GetPolyAndAccByCmd(cmd *cobra.Command) (*poly_go_sdk.PolySdk, *poly_go_sdk.Account, error) {
+func GetPolyAndAccsByCmd(cmd *cobra.Command) (*poly_go_sdk.PolySdk, []*poly_go_sdk.Account, error) {
 	poly := poly_go_sdk.NewPolySdk()
 	rpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
 	if err != nil {
 		return nil, nil, err
 	}
-	wallet, err := cmd.Flags().GetString(SignerWalletPath)
+	walletPath, err := cmd.Flags().GetString(SignerWalletPath)
 	if err := setUpPoly(poly, rpcAddr); err != nil {
 		return nil, nil, err
 	}
@@ -145,11 +145,24 @@ func GetPolyAndAccByCmd(cmd *cobra.Command) (*poly_go_sdk.PolySdk, *poly_go_sdk.
 	if err != nil {
 		return nil, nil, err
 	}
-	acc, err := GetPolyAccountByPassword(poly, wallet, pwd)
+	wallet, err := poly.OpenWallet(walletPath)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("open wallet error: %v", err)
 	}
-	return poly, acc, nil
+	i, num := 0, wallet.GetAccountCount()
+	if num == 0 {
+		return nil, nil, fmt.Errorf("No wallets found in %s", walletPath)
+	}
+	accs := make([]*poly_go_sdk.Account, num)
+	fmt.Printf("Found %d wallets in %s\n", num, walletPath)
+	for i < num {
+		accs[i], err = wallet.GetAccountByIndex(i+1, []byte(pwd))
+		if err != nil {
+			return nil, nil, fmt.Errorf("GetAccountByIndex error: %v", err)
+		}
+		i++
+	}
+	return poly, accs, nil
 }
 
 type ETHTools struct {

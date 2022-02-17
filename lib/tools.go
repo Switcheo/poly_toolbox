@@ -24,6 +24,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"sync"
 
 	types2 "github.com/cosmos/cosmos-sdk/types"
 	"github.com/joeqian10/neo-gogogo/block"
@@ -46,11 +47,14 @@ import (
 	"github.com/tendermint/tendermint/rpc/client/http"
 )
 
+var wg sync.WaitGroup
+
 func RegisterCandidate(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 	pk, err := vconfig.Pubkey(args[0])
 	if err != nil {
 		return err
@@ -73,7 +77,7 @@ func RegisterCandidate(cmd *cobra.Command, args []string) error {
 }
 
 func ApproveCandidate(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
@@ -82,23 +86,31 @@ func ApproveCandidate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	candidate := types.AddressFromPubKey(pk)
-	txhash, err := poly.Native.Nm.ApproveCandidate(args[0], acc)
-	if err != nil {
-		return fmt.Errorf("sendTransaction error: %v", err)
+	wg.Add(len(accs))
+	for i, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Nm.ApproveCandidate(args[i], acc)
+			if err != nil {
+				fmt.Printf("sendTransaction error: %v", err)
+				return
+			}
+			WaitPolyTx(txhash, poly)
+			fmt.Printf("successful to approve candidate: ( candidate: %s, txhash: %s, acc: %s )\n",
+				candidate.ToBase58(), txhash.ToHexString(), acc.Address.ToBase58())
+		}(acc)
 	}
-
-	WaitPolyTx(txhash, poly)
-	fmt.Printf("successful to approve candidate: ( candidate: %s, txhash: %s, acc: %s )\n",
-		candidate.ToBase58(), txhash.ToHexString(), acc.Address.ToBase58())
+	wg.Wait()
 
 	return nil
 }
 
 func UnRegisterCandidate(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 
 	txHash, err := poly.Native.Nm.UnRegisterCandidate(vconfig.PubkeyID(acc.PublicKey), acc)
 	if err != nil {
@@ -113,10 +125,11 @@ func UnRegisterCandidate(cmd *cobra.Command, args []string) error {
 }
 
 func QuitNode(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 
 	txhash, err := poly.Native.Nm.QuitNode(vconfig.PubkeyID(acc.PublicKey), acc)
 	if err != nil {
@@ -129,7 +142,7 @@ func QuitNode(cmd *cobra.Command, args []string) error {
 }
 
 func BlackNode(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
@@ -139,18 +152,26 @@ func BlackNode(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	node := types.AddressFromPubKey(pk)
-	txhash, err := poly.Native.Nm.BlackNode([]string{args[0]}, acc)
-	if err != nil {
-		return fmt.Errorf("failed to black %s: %v", acc.Address.ToBase58(), err)
+	wg.Add(len(accs))
+	for _, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Nm.BlackNode([]string{args[0]}, acc)
+			if err != nil {
+				fmt.Printf("failed to black %s: %v", acc.Address.ToBase58(), err)
+				return
+			}
+			WaitPolyTx(txhash, poly)
+			fmt.Printf("successful to vote yes to black node %s on Poly: txhash: %s\n", node.ToBase58(), txhash.ToHexString())
+		}(acc)
 	}
-	WaitPolyTx(txhash, poly)
-	fmt.Printf("successful to vote yes to black node %s on Poly: txhash: %s\n", node.ToBase58(), txhash.ToHexString())
+	wg.Wait()
 
 	return nil
 }
 
 func WhiteNode(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
@@ -159,12 +180,20 @@ func WhiteNode(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	node := types.AddressFromPubKey(pk)
-	txhash, err := poly.Native.Nm.BlackNode([]string{args[0]}, acc)
-	if err != nil {
-		return fmt.Errorf("failed to white %s: %v", acc.Address.ToBase58(), err)
+	wg.Add(len(accs))
+	for _, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Nm.BlackNode([]string{args[0]}, acc)
+			if err != nil {
+				fmt.Printf("failed to white %s: %v\n", acc.Address.ToBase58(), err)
+				return
+			}
+			WaitPolyTx(txhash, poly)
+			fmt.Printf("successful to vote yes to white node %s on Poly: txhash: %s\n", node.ToBase58(), txhash.ToHexString())
+		}(acc)
 	}
-	WaitPolyTx(txhash, poly)
-	fmt.Printf("successful to vote yes to white node %s on Poly: txhash: %s\n", node.ToBase58(), txhash.ToHexString())
+	wg.Wait()
 
 	return nil
 }
@@ -206,10 +235,11 @@ func CreateCommitDposTx(cmd *cobra.Command, args []string) error {
 }
 
 func SignCommitDposTx(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 
 	tx := &types.Transaction{}
 	raw, err := hex.DecodeString(args[0])
@@ -299,10 +329,11 @@ func CreateUpdateConfigTx(cmd *cobra.Command, args []string) error {
 }
 
 func SignUpdateConfigTx(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 
 	tx := &types.Transaction{}
 	raw, err := hex.DecodeString(args[0])
@@ -361,10 +392,11 @@ func RegisterRelayer(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 	txhash, err := poly.Native.Rm.RegisterRelayer(addrs, acc)
 	if err != nil {
 		return err
@@ -387,7 +419,7 @@ func RegisterRelayer(cmd *cobra.Command, args []string) error {
 }
 
 func ApproveRegisterRelayer(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
@@ -395,12 +427,20 @@ func ApproveRegisterRelayer(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	txhash, err := poly.Native.Rm.ApproveRegisterRelayer(id, acc)
-	if err != nil {
-		return err
+	wg.Add(len(accs))
+	for _, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Rm.ApproveRegisterRelayer(id, acc)
+			if err != nil {
+				fmt.Printf("err approving with acc: %s: %v\n", acc.Address.ToBase58(), err)
+				return
+			}
+			WaitPolyTx(txhash, poly)
+			fmt.Printf("successful to approve registration id %d: txhash: %s\n", id, txhash.ToHexString())
+		}(acc)
 	}
-	WaitPolyTx(txhash, poly)
-	fmt.Printf("successful to approve registration id %d: txhash: %s\n", id, txhash.ToHexString())
+	wg.Wait()
 
 	return nil
 }
@@ -415,10 +455,11 @@ func RemoveRelayer(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 	txhash, err := poly.Native.Rm.RemoveRelayer(addrs, acc)
 	if err != nil {
 		return err
@@ -441,7 +482,7 @@ func RemoveRelayer(cmd *cobra.Command, args []string) error {
 }
 
 func ApproveRemoveRelayer(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
@@ -449,12 +490,20 @@ func ApproveRemoveRelayer(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	txhash, err := poly.Native.Rm.ApproveRemoveRelayer(id, acc)
-	if err != nil {
-		return err
+	wg.Add(len(accs))
+	for _, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Rm.ApproveRemoveRelayer(id, acc)
+			if err != nil {
+				fmt.Printf("err approving with acc: %s: %v\n", acc.Address.ToBase58(), err)
+				return
+			}
+			WaitPolyTx(txhash, poly)
+			fmt.Printf("successful to approve remove id %d: txhash: %s\n", id, txhash.ToHexString())
+		}(acc)
 	}
-	WaitPolyTx(txhash, poly)
-	fmt.Printf("successful to approve remove id %d: txhash: %s\n", id, txhash.ToHexString())
+	wg.Wait()
 
 	return nil
 }
@@ -495,10 +544,11 @@ func RegisterSideChain(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 
 	var txhash common.Uint256
 	if extra == "" {
@@ -520,17 +570,25 @@ func ApproveRegisterSideChain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
-	txhash, err := poly.Native.Scm.ApproveRegisterSideChain(chainId, acc)
-	if err != nil {
-		return fmt.Errorf("ApproveRegisterSideChain failed: %v", err)
+	wg.Add(len(accs))
+	for _, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Scm.ApproveRegisterSideChain(chainId, acc)
+			if err != nil {
+				fmt.Printf("ApproveRegisterSideChain failed with acc %s: %v\n", acc.Address.ToBase58(), err)
+				return
+			}
+			WaitPolyTx(txhash, poly)
+			fmt.Printf("successful to approve: ( acc: %s, txhash: %s, chain-id: %d )\n",
+				acc.Address.ToBase58(), txhash.ToHexString(), chainId)
+		}(acc)
 	}
-	WaitPolyTx(txhash, poly)
-	fmt.Printf("successful to approve: ( acc: %s, txhash: %s, chain-id: %d )\n",
-		acc.Address.ToBase58(), txhash.ToHexString(), chainId)
+	wg.Wait()
 
 	return nil
 }
@@ -571,10 +629,11 @@ func UpdateSideChain(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 
 	var txhash common.Uint256
 	if extra == "" {
@@ -596,16 +655,24 @@ func ApproveUpdateSideChain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
-	txhash, err := poly.Native.Scm.ApproveUpdateSideChain(chainId, acc)
-	if err != nil {
-		return fmt.Errorf("ApproveUpdateSideChain failed: %v", err)
+	wg.Add(len(accs))
+	for _, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Scm.ApproveUpdateSideChain(chainId, acc)
+			if err != nil {
+				fmt.Printf("ApproveUpdateSideChain failed with acc: %s: %v\n", acc.Address.ToBase58(), err)
+				return
+			}
+			fmt.Printf("successful to approve: ( acc: %s, txhash: %s, chain-id: %d )\n",
+				acc.Address.ToBase58(), txhash.ToHexString(), chainId)
+		}(acc)
 	}
-	fmt.Printf("successful to approve: ( acc: %s, txhash: %s, chain-id: %d )\n",
-		acc.Address.ToBase58(), txhash.ToHexString(), chainId)
+	wg.Wait()
 
 	return nil
 }
@@ -615,10 +682,11 @@ func QuitSideChain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 	txhash, err := poly.Native.Scm.QuitSideChain(chainId, acc)
 	if err != nil {
 		return fmt.Errorf("QuitSideChain failed: %v", err)
@@ -634,16 +702,24 @@ func ApproveQuitSideChain(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
-	txhash, err := poly.Native.Scm.ApproveQuitSideChain(chainId, acc)
-	if err != nil {
-		return fmt.Errorf("ApproveQuitSideChain failed: %v", err)
+	wg.Add(len(accs))
+	for _, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Scm.ApproveQuitSideChain(chainId, acc)
+			if err != nil {
+				fmt.Printf("ApproveQuitSideChain failed with acc: %s: %v\n", acc.Address.ToBase58(), err)
+				return
+			}
+			fmt.Printf("successful to approve quit chain: ( acc: %s, txhash: %s, chain-id: %d )\n",
+				acc.Address.ToBase58(), txhash.ToHexString(), chainId)
+		}(acc)
 	}
-	fmt.Printf("successful to approve quit chain: ( acc: %s, txhash: %s, chain-id: %d )\n",
-		acc.Address.ToBase58(), txhash.ToHexString(), chainId)
+	wg.Wait()
 
 	return nil
 }
@@ -1137,10 +1213,11 @@ func CreateSyncNeoGenesisHdrTx(cmd *cobra.Command, args []string) error {
 }
 
 func SignPolyMultiSigTx(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 
 	tx := &types.Transaction{}
 	raw, err := hex.DecodeString(args[0])
@@ -1255,10 +1332,11 @@ func RegisterStateValidator(cmd *cobra.Command, args []string) error {
 	stateValidatorString := args[0]
 	svs := strings.Split(stateValidatorString, ",")
 
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 	txhash, err := poly.Native.Sm.RegisterStateValidator(svs, acc)
 	if err != nil {
 		return err
@@ -1281,7 +1359,7 @@ func RegisterStateValidator(cmd *cobra.Command, args []string) error {
 }
 
 func ApproveRegisterStateValidator(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
@@ -1289,12 +1367,23 @@ func ApproveRegisterStateValidator(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	txhash, err := poly.Native.Sm.ApproveRegisterStateValidator(id, acc)
 	if err != nil {
 		return err
 	}
-	WaitPolyTx(txhash, poly)
-	fmt.Printf("successful to approve state validators registration id: %d, txhash: %s\n", id, txhash.ToHexString())
+	wg.Add(len(accs))
+	for _, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Sm.ApproveRegisterStateValidator(id, acc)
+			if err != nil {
+				fmt.Printf("failed to approve state validators registration with acc: %s, %v\n", acc.Address.ToBase58(), err)
+				return
+			}
+			WaitPolyTx(txhash, poly)
+			fmt.Printf("successful to approve state validators registration id: %d, txhash: %s\n", id, txhash.ToHexString())
+		}(acc)
+	}
+	wg.Wait()
 
 	return nil
 }
@@ -1303,10 +1392,11 @@ func RemoveStateValidator(cmd *cobra.Command, args []string) error {
 	stateValidatorString := args[0]
 	svs := strings.Split(stateValidatorString, ",")
 
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
+	acc := accs[0]
 	txhash, err := poly.Native.Sm.RemoveStateValidator(svs, acc)
 	if err != nil {
 		return err
@@ -1329,7 +1419,7 @@ func RemoveStateValidator(cmd *cobra.Command, args []string) error {
 }
 
 func ApproveRemoveStateValidator(cmd *cobra.Command, args []string) error {
-	poly, acc, err := GetPolyAndAccByCmd(cmd)
+	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
 		return err
 	}
@@ -1337,12 +1427,20 @@ func ApproveRemoveStateValidator(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	txhash, err := poly.Native.Sm.ApproveRemoveStateValidator(id, acc)
-	if err != nil {
-		return err
+	wg.Add(len(accs))
+	for _, acc := range accs {
+		go func(acc *poly_go_sdk.Account) {
+			defer wg.Done()
+			txhash, err := poly.Native.Sm.ApproveRemoveStateValidator(id, acc)
+			if err != nil {
+				fmt.Printf("failed to approve state validators removal with acc: %s, %v\n", acc.Address.ToBase58(), err)
+				return
+			}
+			WaitPolyTx(txhash, poly)
+			fmt.Printf("successful to approve state validators removal id: %d, txhash: %s\n", id, txhash.ToHexString())
+		}(acc)
 	}
-	WaitPolyTx(txhash, poly)
-	fmt.Printf("successful to approve state validators removal id: %d, txhash: %s\n", id, txhash.ToHexString())
+	wg.Wait()
 
 	return nil
 }
