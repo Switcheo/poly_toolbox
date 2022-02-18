@@ -138,7 +138,6 @@ func CreateCommitDposTxCmd() *cobra.Command {
 		RunE: CreateCommitDposTx,
 	}
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 	return c
 }
 
@@ -164,7 +163,6 @@ func CreateUpdateConfigTxCmd() *cobra.Command {
 		Args: cobra.ExactArgs(4),
 	}
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 	return c
 }
 
@@ -376,7 +374,6 @@ func CreateSyncOntGenesisHdrTxCmd() *cobra.Command {
 
 	c.Flags().String(OntRpcAddr, "", "ontology node RPC address")
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 	_ = c.MarkFlagRequired(OntRpcAddr)
 
 	return c
@@ -391,7 +388,6 @@ func CreateSyncEthGenesisHdrTxCmd() *cobra.Command {
 
 	c.Flags().String(EthRpcAddr, "", "ethereum node RPC address")
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 	_ = c.MarkFlagRequired(EthRpcAddr)
 
 	return c
@@ -406,7 +402,6 @@ func CreateSyncBscGenesisHdrTxCmd() *cobra.Command {
 
 	c.Flags().String(BscRpcAddr, "", "bsc node RPC address")
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 	_ = c.MarkFlagRequired(BscRpcAddr)
 
 	return c
@@ -420,7 +415,6 @@ func CreateSyncOkGenesisHdrTxCmd() *cobra.Command {
 	}
 
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 
 	return c
 }
@@ -433,7 +427,6 @@ func CreateSyncRawGenesisHdrTxCmd() *cobra.Command {
 	}
 
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 
 	return c
 }
@@ -447,7 +440,6 @@ func CreateSyncMscGenesisHdrTxCmd() *cobra.Command {
 
 	c.Flags().String(MscRpcAddr, "", "msc node RPC address")
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 	_ = c.MarkFlagRequired(MscRpcAddr)
 
 	return c
@@ -464,7 +456,6 @@ func CreateSyncSwticheoGenesisHdrTxCmd() *cobra.Command {
 	c.Flags().String(SwitcheoRpcAddr, "", "Switcheo node RPC address")
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
 	_ = c.MarkFlagRequired(SwitcheoRpcAddr)
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 
 	return c
 }
@@ -489,7 +480,6 @@ func CreateSyncNeoGenesisHdrTxCmd() *cobra.Command {
 	c.Flags().String(NeoRpcAddr, "", "NEO node RPC address")
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
 	_ = c.MarkFlagRequired(NeoRpcAddr)
-	_ = c.MarkFlagRequired(ConsensusPubKeys)
 
 	return c
 }

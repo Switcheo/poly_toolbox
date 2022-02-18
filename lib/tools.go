@@ -17,6 +17,7 @@
 package lib
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -34,6 +35,7 @@ import (
 	ontology_go_sdk "github.com/ontio/ontology-go-sdk"
 	"github.com/polynetwork/cosmos-poly-module/headersync"
 	poly_go_sdk "github.com/polynetwork/poly-go-sdk"
+	"github.com/polynetwork/poly-io-test/config"
 	"github.com/polynetwork/poly/common"
 	"github.com/polynetwork/poly/common/password"
 	vconfig "github.com/polynetwork/poly/consensus/vbft/config"
@@ -41,9 +43,13 @@ import (
 	"github.com/polynetwork/poly/core/types"
 	"github.com/polynetwork/poly/native/service/governance/node_manager"
 	"github.com/polynetwork/poly/native/service/header_sync/bsc"
-	"github.com/polynetwork/poly/native/service/header_sync/cosmos"
 	"github.com/polynetwork/poly/native/states"
 	"github.com/spf13/cobra"
+	sed25519 "github.com/switcheo/tendermint/crypto/ed25519"
+	tm34http "github.com/switcheo/tendermint/rpc/client/http"
+	tm34types "github.com/switcheo/tendermint/types"
+	tmcrypto "github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/rpc/client/http"
 )
 
@@ -1005,12 +1011,25 @@ func CreateSyncOkGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+type CosmosHeader struct {
+	Header  tm34types.Header
+	Commit  *tm34types.Commit
+	Valsets []*CosmosValidator
+}
+
+type CosmosValidator struct {
+	Address          tm34types.Address `json:"address"`
+	PubKey           tmcrypto.PubKey   `json:"pub_key"`
+	VotingPower      int64             `json:"voting_power"`
+	ProposerPriority int64             `json:"proposer_priority"`
+}
+
 func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	id, err := strconv.ParseUint(args[0], 10, 64)
 	if err != nil {
 		return err
 	}
-	h, err := strconv.ParseUint(args[1], 10, 64)
+	h, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil {
 		return err
 	}
@@ -1018,23 +1037,48 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	rpcCli, err := http.New(swthRpc, "/websocket")
-	if err != nil {
-		return err
-	}
-	height := int64(h)
-	res, err := rpcCli.Commit(&height)
-	if err != nil {
-		return err
-	}
-	vals, err := getValidators(rpcCli, height)
+	rpccli, err := tm34http.New(swthRpc, "/websocket")
 	if err != nil {
 		panic(err)
 	}
-	ch := &cosmos.CosmosHeader{
+	p := 1
+	per := 100
+	vSet := make([]*CosmosValidator, 0)
+	for {
+		res, err := rpccli.Validators(context.Background(), &h, &p, &per)
+		if err != nil {
+			if strings.Contains(err.Error(), "page should be within") {
+				break
+			}
+			panic(err)
+		}
+		// In case tendermint don't give relayer the right error
+		if len(res.Validators) == 0 {
+			break
+		}
+		for i := range res.Validators {
+			fmt.Printf("v%d, %+v\n", i, res.Validators[i])
+			// var [32]byte bz = res.Validators[i].PubKey.Bytes()
+			pk := (res.Validators[i].PubKey.(sed25519.PubKey))
+			var bz [32]byte
+			copy(bz[:], pk)
+			vSet = append(vSet, &CosmosValidator{
+				Address:          res.Validators[i].Address,
+				PubKey:           ed25519.PubKeyEd25519(bz),
+				VotingPower:      res.Validators[i].VotingPower,
+				ProposerPriority: res.Validators[i].ProposerPriority,
+			})
+		}
+		p++
+	}
+	res, err := rpccli.Commit(context.Background(), &config.DefConfig.CMEpoch)
+	if err != nil {
+		panic(err)
+	}
+	ch := &CosmosHeader{
 		Header:  *res.Header,
 		Commit:  res.Commit,
-		Valsets: vals,
+		Valsets: vSet,
 	}
 	cdc := NewCodec()
 	raw, err := cdc.MarshalBinaryBare(ch)
