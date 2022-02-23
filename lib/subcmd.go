@@ -453,7 +453,7 @@ func CreateSyncSwticheoGenesisHdrTxCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 	}
 
-	c.Flags().String(SwitcheoRpcAddr, "", "Switcheo node RPC address")
+	c.Flags().String(SwitcheoRpcAddr, "http://localhost:20336", "Switcheo node RPC address")
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
 	_ = c.MarkFlagRequired(SwitcheoRpcAddr)
 

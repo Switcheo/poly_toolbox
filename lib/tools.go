@@ -35,7 +35,6 @@ import (
 	ontology_go_sdk "github.com/ontio/ontology-go-sdk"
 	"github.com/polynetwork/cosmos-poly-module/headersync"
 	poly_go_sdk "github.com/polynetwork/poly-go-sdk"
-	"github.com/polynetwork/poly-io-test/config"
 	"github.com/polynetwork/poly/common"
 	"github.com/polynetwork/poly/common/password"
 	vconfig "github.com/polynetwork/poly/consensus/vbft/config"
@@ -206,6 +205,13 @@ func WhiteNode(cmd *cobra.Command, args []string) error {
 
 func CreateCommitDposTx(cmd *cobra.Command, args []string) error {
 	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Nm.NewCommitDposTransaction()
 	if err != nil {
 		return err
@@ -290,6 +296,13 @@ func CreateUpdateConfigTx(cmd *cobra.Command, args []string) error {
 	}
 
 	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Nm.NewUpdateConfigTransaction(uint32(blockMsgDelay), uint32(hashMsgDelay),
 		uint32(peerHandshakeTimeout), uint32(maxBlockChangeView))
 	if err != nil {
@@ -733,6 +746,13 @@ func CreateSyncOntGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	}
 
 	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, blk.Header.ToArray())
 	if err != nil {
 		return err
@@ -782,6 +802,13 @@ func CreateSyncEthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	}
 
 	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
 	if err != nil {
 		return err
@@ -835,6 +862,13 @@ func CreateSyncMscGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	}
 
 	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
 	if err != nil {
 		return err
@@ -904,6 +938,13 @@ func CreateSyncBscGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	}
 
 	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
 	if err != nil {
 		return err
@@ -945,6 +986,13 @@ func CreateSyncRawGenesisHdrTxToPolyTx(cmd *cobra.Command, args []string) error 
 	}
 
 	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
 	if err != nil {
 		return err
@@ -986,6 +1034,13 @@ func CreateSyncOkGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	}
 
 	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
 	if err != nil {
 		return err
@@ -1071,7 +1126,7 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 		}
 		p++
 	}
-	res, err := rpccli.Commit(context.Background(), &config.DefConfig.CMEpoch)
+	res, err := rpccli.Commit(context.Background(), &h)
 	if err != nil {
 		panic(err)
 	}
@@ -1087,6 +1142,13 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	}
 
 	poly := poly_go_sdk.NewPolySdk()
+	rpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, rpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, raw)
 	if err != nil {
 		return err
@@ -1141,6 +1203,13 @@ func CreateSyncNeoGenesisHdrTx(cmd *cobra.Command, args []string) error {
 	}
 
 	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
 	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, buf.Bytes())
 	if err != nil {
 		return err

@@ -102,7 +102,7 @@ func GetPolyAccountByPassword(asdk *poly_go_sdk.PolySdk, path, pwdStr string) (*
 	return user, nil
 }
 
-func setUpPoly(poly *poly_go_sdk.PolySdk, rpc string) error {
+func SetUpPoly(poly *poly_go_sdk.PolySdk, rpc string) error {
 	poly.NewRpcClient().SetAddress(rpc)
 	hdr, err := poly.GetHeaderByHeight(0)
 	if err != nil {
@@ -138,7 +138,7 @@ func GetPolyAndAccsByCmd(cmd *cobra.Command) (*poly_go_sdk.PolySdk, []*poly_go_s
 		return nil, nil, err
 	}
 	walletPath, err := cmd.Flags().GetString(SignerWalletPath)
-	if err := setUpPoly(poly, rpcAddr); err != nil {
+	if err := SetUpPoly(poly, rpcAddr); err != nil {
 		return nil, nil, err
 	}
 	pwd, err := cmd.Flags().GetString(SignerWalletPwd)
