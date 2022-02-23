@@ -18,9 +18,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/ontio/poly_toolbox/lib"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func main() {
@@ -33,7 +34,7 @@ func main() {
 	rootCmd.DisableFlagsInUseLine = true
 	rootCmd.AddCommand(
 		lib.PolyCmd(),
-		lib.SwitcheoCmd())
+		lib.CarbonCmd())
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("failed to run: %v", err)
 		os.Exit(1)

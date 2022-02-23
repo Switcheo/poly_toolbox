@@ -18,7 +18,7 @@ cd poly_toolbox
 go build -o toolbox cmd/run.go
 ```
 
-After building the source code successfully,  you should see the executable program `toolbox`. 
+After building the source code successfully,  you should see the executable program `toolbox`.
 
 You can see some guide information by running `toolbox -h`.
 
@@ -38,7 +38,7 @@ You can set password by flag `--signer_wallet_pwd`. But we suggest you **not usi
 
 ### Approve Relayer Registration
 
-Consensus account can approve registration of relayer with the registration **ID**. 
+Consensus account can approve registration of relayer with the registration **ID**.
 
 ```
 ./toolbox poly relayer_manager approve_register_relayer [ID] --poly_rpc_addr="http://poly_rpc:port" --signer_wallet_path=/path/to/wallet.dat
@@ -62,12 +62,12 @@ For those chains with `extra_info` field, we need to add one more flag `--extra`
 
 The extra info should be a string in json format, like `{"ChainID":6}`.
 
-### Approve Side Chain Registration 
+### Approve Side Chain Registration
 
 Consensus account can approve registration of a side chain with the chain-id.
 
 ```
-./toolbox poly side_chain_manager approve_register_side_chain --chain_id=[number] --poly_rpc_addr="http://poly_rpc:port" --signer_wallet_path=/path/to/wallet.dat 
+./toolbox poly side_chain_manager approve_register_side_chain --chain_id=[number] --poly_rpc_addr="http://poly_rpc:port" --signer_wallet_path=/path/to/wallet.dat
 ```
 
 ### Create Transaction To Sync Ontology Genesis Header
@@ -75,12 +75,12 @@ Consensus account can approve registration of a side chain with the chain-id.
 Create a raw transaction to sync Ontology genesis header to Poly. Noted, you must set all public keys of multisig address.
 
 ```
-./toolbox poly header_sync create_sync_ont_genesis_hdr_tx [chain-id] [height] --consensus_public_keys=pub1,pub2,pub3 --ont_rpc="http://ontology:20336" 
+./toolbox poly header_sync create_sync_ont_genesis_hdr_tx [chain-id] [height] --consensus_public_keys=pub1,pub2,pub3 --ont_rpc="http://ontology:20336"
 ```
 
 ### Sign Multisig Transacion of Poly
 
-Using your wallet to sign a raw multisig-transaction. Return with the raw transacion signed by your account. Pass the raw transaction to next one of the multisig-address. 
+Using your wallet to sign a raw multisig-transaction. Return with the raw transacion signed by your account. Pass the raw transaction to next one of the multisig-address.
 
 ```
 ./toolbox poly header_sync sign_poly_multisig_tx [raw_tx] --poly_rpc_addr="http://poly_rpc_addr" --signer_wallet_path=/path/to/wallet.dat
@@ -93,14 +93,14 @@ Create a poly transaction for syncing Switcheo genesis header to Poly. You need 
 Run the follow and get the raw transaction:
 
 ```
-./toolbox poly header_sync create_sync_switcheo_genesis_hdr_tx [swth_chain_id] [swth_hdr_height] --switcheo_rpc="http://switcheo_rpc" --consensus_public_keys=pub1,pub2,pub3 
+./toolbox poly header_sync create_sync_switcheo_genesis_hdr_tx [carbon_chain_id] [carbon_hdr_height] --switcheo_rpc="http://switcheo_rpc" --consensus_public_keys=pub1,pub2,pub3
 ```
 
 So you have the raw transaction of Poly and you need to sign this transaction using `./toolbox poly header_sync sign_poly_multisig_tx` which has already been introduced above. After signing, you need to send it to next signer in consensus peers. Signers are going to sign it one by one. When the signatures is enough, the transaction would be send to Poly automaticly.
 
 ### Create Transaction To Sync NEO Genesis Header
 
-Create a poly transaction for syncing NEO genesis header to Poly. You need to set the cross-chain chain-id of NEO and the height of NEO header. 
+Create a poly transaction for syncing NEO genesis header to Poly. You need to set the cross-chain chain-id of NEO and the height of NEO header.
 
 Run the follow and get the raw transaction:
 
@@ -112,7 +112,7 @@ Next sign it by `./toolbox poly header_sync sign_poly_multisig_tx`.
 
 ### Create Transaction To Sync Ethereum Genesis Header
 
-Create a poly transaction for syncing Ethereum genesis header to Poly. You need to set the cross-chain chain-id of Ethereum and the height of Ethereum header. 
+Create a poly transaction for syncing Ethereum genesis header to Poly. You need to set the cross-chain chain-id of Ethereum and the height of Ethereum header.
 
 Run the follow and get the raw transaction:
 
@@ -124,7 +124,7 @@ Next sign it by `./toolbox poly header_sync sign_poly_multisig_tx`.
 
 ### Create Transaction To Sync BSC Genesis Header
 
-Create a poly transaction for syncing BSC genesis header to Poly. You need to set the cross-chain chain-id of BSC and the height of BSC header. 
+Create a poly transaction for syncing BSC genesis header to Poly. You need to set the cross-chain chain-id of BSC and the height of BSC header.
 
 Run the follow and get the raw transaction:
 
@@ -139,7 +139,7 @@ Next sign it by `./toolbox poly header_sync sign_poly_multisig_tx`.
 When switcheo init poly cross-chain function, you need to sync poly header to Switcheo. This header must be consensus switching block header. That means field `ConsensusPayload` of header is not empty. The lastest switching header is suggested.
 
 ```
-./toolbox switcheo sync_poly_genesis_hdr_to_switcheo [height] [swth_gas] [swth_price] --poly_rpc_addr="http://poly_rpc_addr" --switcheo_rpc="http://switcheo_rpc" --switcheo_wallet=/path/to/wallet 
+./toolbox switcheo sync_poly_genesis_hdr_to_switcheo [height] [carbon_gas] [carbon_price] --poly_rpc_addr="http://poly_rpc_addr" --switcheo_rpc="http://switcheo_rpc" --switcheo_wallet=/path/to/wallet
 ```
 
 The `switcheo_wallet` should be exported from tendermint. Like follow:

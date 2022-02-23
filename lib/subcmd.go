@@ -355,8 +355,9 @@ func PolyHeaderSyncCmd() *cobra.Command {
 	sm.AddCommand(
 		CreateSyncOntGenesisHdrTxCmd(),
 		CreateSyncEthGenesisHdrTxCmd(),
-		CreateSyncSwticheoGenesisHdrTxCmd(),
+		CreateSyncCarbonGenesisHdrTxCmd(),
 		CreateSyncNeoGenesisHdrTxCmd(),
+		CreateSyncNeo3GenesisHdrTxCmd(),
 		CreateSyncBscGenesisHdrTxCmd(),
 		CreateSyncMscGenesisHdrTxCmd(),
 		CreateSyncOkGenesisHdrTxCmd(),
@@ -445,28 +446,18 @@ func CreateSyncMscGenesisHdrTxCmd() *cobra.Command {
 	return c
 }
 
-func CreateSyncSwticheoGenesisHdrTxCmd() *cobra.Command {
+func CreateSyncCarbonGenesisHdrTxCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "create_sync_switcheo_genesis_hdr_tx [swth_chain_id] [swth_hdr_height]",
-		Short: "create transaction to sync Switcheo header to Poly.",
-		RunE:  CreateSyncSwthGenesisHdrToPolyTx,
+		Use:   "create_sync_carbon_genesis_hdr_tx [carbon_chain_id] [carbon_hdr_height]",
+		Short: "create transaction to sync Carbon header to Poly.",
+		RunE:  CreateSyncCarbonGenesisHdrToPolyTx,
 		Args:  cobra.ExactArgs(2),
 	}
 
-	c.Flags().String(SwitcheoRpcAddr, "http://localhost:20336", "Switcheo node RPC address")
+	c.Flags().String(CarbonRpcAddr, "http://localhost:20336", "Carbon node RPC address")
 	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
-	_ = c.MarkFlagRequired(SwitcheoRpcAddr)
+	_ = c.MarkFlagRequired(CarbonRpcAddr)
 
-	return c
-}
-
-func SignPolyMultiSigTxCmd() *cobra.Command {
-	c := &cobra.Command{
-		Use:   "sign_poly_multisig_tx [raw_tx]",
-		Short: "sign multisig transaction of Poly",
-		RunE:  SignPolyMultiSigTx,
-		Args:  cobra.ExactArgs(1),
-	}
 	return c
 }
 
@@ -484,29 +475,53 @@ func CreateSyncNeoGenesisHdrTxCmd() *cobra.Command {
 	return c
 }
 
-func SwitcheoCmd() *cobra.Command {
-	sc := &cobra.Command{
-		Use:   "switcheo",
-		Short: "swticheo subcommands",
-		Long: "This command handles all functions about Switcheo, like syncing " +
-			"genesis headers of Poly to Switcheo, etc. ",
+func CreateSyncNeo3GenesisHdrTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "create_sync_neo3_genesis_hdr_tx [neo3_chain_id] [height]",
+		Short: "create transaction to sync NEO header to Poly.",
+		RunE:  CreateSyncNeo3GenesisHdrTx,
 	}
 
-	sc.PersistentFlags().String(SwitcheoRpcAddr, "", "switcheo rpc address")
-	sc.PersistentFlags().String(SwitcheoWallet, "", "switcheo wallet path")
-	sc.PersistentFlags().String(SwitcheoWalletPwd, "", "switcheo wallet password")
+	c.Flags().String(NeoRpcAddr, "", "NEO3 node RPC address")
+	c.Flags().String(ConsensusPubKeys, "", "public keys for consensus peers, sep by ','. ")
+	_ = c.MarkFlagRequired(NeoRpcAddr)
+
+	return c
+}
+
+func SignPolyMultiSigTxCmd() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "sign_poly_multisig_tx [raw_tx]",
+		Short: "sign multisig transaction of Poly",
+		RunE:  SignPolyMultiSigTx,
+		Args:  cobra.ExactArgs(1),
+	}
+	return c
+}
+
+func CarbonCmd() *cobra.Command {
+	sc := &cobra.Command{
+		Use:   "carbon",
+		Short: "swticheo subcommands",
+		Long: "This command handles all functions about Carbon, like syncing " +
+			"genesis headers of Poly to Carbon, etc. ",
+	}
+
+	sc.PersistentFlags().String(CarbonRpcAddr, "", "carbon rpc address")
+	sc.PersistentFlags().String(CarbonWallet, "", "carbon wallet path")
+	sc.PersistentFlags().String(CarbonWalletPwd, "", "carbon wallet password")
 
 	sc.AddCommand(
-		SyncPolyGenesisHdrToSwitcheoCmd())
+		SyncPolyGenesisHdrToCarbonCmd())
 
 	return sc
 }
 
-func SyncPolyGenesisHdrToSwitcheoCmd() *cobra.Command {
+func SyncPolyGenesisHdrToCarbonCmd() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "sync_poly_genesis_hdr_to_switcheo [height] [swth_gas] [swth_price]",
-		Short: "sync genesis header of poly to switcheo",
-		RunE:  SyncPolyHdrToSwitcheo,
+		Use:   "sync_poly_genesis_hdr_to_carbon [height] [carbon_gas] [carbon_price]",
+		Short: "sync genesis header of poly to carbon",
+		RunE:  SyncPolyHdrToCarbon,
 		Args:  cobra.ExactArgs(3),
 	}
 
@@ -517,10 +532,10 @@ func SyncPolyGenesisHdrToSwitcheoCmd() *cobra.Command {
 
 //func EthereumCmd() *cobra.Command {
 //	ec := &cobra.Command{
-//		Use:   "switcheo",
+//		Use:   "carbon",
 //		Short: "swticheo subcommands",
-//		Long:  "This command handles all functions about Switcheo, like syncing " +
-//			"genesis headers of Poly to Switcheo, etc. ",
+//		Long:  "This command handles all functions about Carbon, like syncing " +
+//			"genesis headers of Poly to Carbon, etc. ",
 //	}
 //
 //	ec.PersistentFlags().String(EthRpcAddr)

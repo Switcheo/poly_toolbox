@@ -57,27 +57,27 @@ import (
 )
 
 const (
-	SignerWalletPath      = "signer_wallet_path"
-	SignerWalletPwd       = "signer_wallet_pwd"
-	PolyRpcAddr           = "poly_rpc_addr"
-	ConsensusPubKeys      = "consensus_public_keys"
-	ChainId               = "chain_id"
-	Router                = "router"
-	Name                  = "name"
-	BlkToWait             = "blocks_to_wait"
-	CMCC                  = "CMCC"
-	ExtraInfo             = "extra"
-	OntRpcAddr            = "ont_rpc"
-	EthRpcAddr            = "eth_rpc"
-	BscRpcAddr            = "bsc_rpc"
-	MscRpcAddr            = "msc_rpc"
-	SwitcheoRpcAddr       = "switcheo_rpc"
-	NeoRpcAddr            = "neo_rpc"
-	SwitcheoWallet        = "switcheo_wallet"
-	SwitcheoWalletPwd     = "switcheo_wallet_pwd"
-	SwitcheoCosmosChainID = "switcheo-tradehub-1"
-	BroadcastConnTimeOut  = "connection timed out"
-	SeqErr                = "verify correct account sequence and chain-id"
+	SignerWalletPath     = "signer_wallet_path"
+	SignerWalletPwd      = "signer_wallet_pwd"
+	PolyRpcAddr          = "poly_rpc_addr"
+	ConsensusPubKeys     = "consensus_public_keys"
+	ChainId              = "chain_id"
+	Router               = "router"
+	Name                 = "name"
+	BlkToWait            = "blocks_to_wait"
+	CMCC                 = "CMCC"
+	ExtraInfo            = "extra"
+	OntRpcAddr           = "ont_rpc"
+	EthRpcAddr           = "eth_rpc"
+	BscRpcAddr           = "bsc_rpc"
+	MscRpcAddr           = "msc_rpc"
+	CarbonRpcAddr        = "carbon_rpc"
+	NeoRpcAddr           = "neo_rpc"
+	CarbonWallet         = "carbon_wallet"
+	CarbonWalletPwd      = "carbon_wallet_pwd"
+	CarbonCosmosChainID  = "carbon-1"
+	BroadcastConnTimeOut = "connection timed out"
+	SeqErr               = "verify correct account sequence and chain-id"
 )
 
 func GetPolyAccountByPassword(asdk *poly_go_sdk.PolySdk, path, pwdStr string) (*poly_go_sdk.Account, error) {
@@ -440,9 +440,9 @@ type CosmosAcc struct {
 
 func NewCosmosAcc(wallet, pwd string, cli *http2.HTTP, cdc *codec.Codec) (*CosmosAcc, error) {
 	config := types3.GetConfig()
-	config.SetBech32PrefixForAccount("swth", "swthpub")
-	config.SetBech32PrefixForValidator("swthvaloper", "swthvaloperpub")
-	config.SetBech32PrefixForConsensusNode("swthvalcons", "swthvalconspub")
+	config.SetBech32PrefixForAccount("carbon", "carbonpub")
+	config.SetBech32PrefixForValidator("carbonvaloper", "carbonvaloperpub")
+	config.SetBech32PrefixForConsensusNode("carbonvalcons", "carbonvalconspub")
 
 	acc := &CosmosAcc{}
 	bz, err := ioutil.ReadFile(wallet)
@@ -500,7 +500,7 @@ func SendCosmosTx(msgs []types3.Msg, acc *CosmosAcc, gas uint64, fees types3.Coi
 	toSign := auth.StdSignMsg{
 		Sequence:      seq,
 		AccountNumber: acc.AccNum,
-		ChainID:       SwitcheoCosmosChainID,
+		ChainID:       CarbonCosmosChainID,
 		Msgs:          msgs,
 		Fee:           auth.NewStdFee(gas, fees),
 	}
@@ -555,7 +555,7 @@ func CalcCosmosFees(gasPrice types3.DecCoins, gas uint64) (types3.Coins, error) 
 	return fees, nil
 }
 
-func WaitSwitcheoTx(txhash bytes2.HexBytes, cli *http2.HTTP) {
+func WaitCarbonTx(txhash bytes2.HexBytes, cli *http2.HTTP) {
 	tick := time.NewTicker(time.Second)
 	for range tick.C {
 		res, err := cli.Tx(txhash, false)

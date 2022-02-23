@@ -31,6 +31,9 @@ import (
 	"github.com/joeqian10/neo-gogogo/block"
 	"github.com/joeqian10/neo-gogogo/helper/io"
 	"github.com/joeqian10/neo-gogogo/rpc"
+	block3 "github.com/joeqian10/neo3-gogogo/block"
+	io3 "github.com/joeqian10/neo3-gogogo/io"
+	rpc3 "github.com/joeqian10/neo3-gogogo/rpc"
 	"github.com/ontio/ontology-crypto/keypair"
 	ontology_go_sdk "github.com/ontio/ontology-go-sdk"
 	"github.com/polynetwork/cosmos-poly-module/headersync"
@@ -1079,7 +1082,7 @@ type CosmosValidator struct {
 	ProposerPriority int64             `json:"proposer_priority"`
 }
 
-func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
+func CreateSyncCarbonGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	id, err := strconv.ParseUint(args[0], 10, 64)
 	if err != nil {
 		return err
@@ -1088,11 +1091,11 @@ func CreateSyncSwthGenesisHdrToPolyTx(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	swthRpc, err := cmd.Flags().GetString(SwitcheoRpcAddr)
+	carbonRpc, err := cmd.Flags().GetString(CarbonRpcAddr)
 	if err != nil {
 		return err
 	}
-	rpccli, err := tm34http.New(swthRpc, "/websocket")
+	rpccli, err := tm34http.New(carbonRpc, "/websocket")
 	if err != nil {
 		panic(err)
 	}
@@ -1235,6 +1238,67 @@ func CreateSyncNeoGenesisHdrTx(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func CreateSyncNeo3GenesisHdrTx(cmd *cobra.Command, args []string) error {
+	id, err := strconv.ParseUint(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+	h, err := strconv.ParseUint(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+	rpcAddr, err := cmd.Flags().GetString(NeoRpcAddr)
+	if err != nil {
+		return err
+	}
+	cli := rpc3.NewClient(rpcAddr)
+	resp := cli.GetBlockHeader(strconv.Itoa(int(h)))
+	if resp.HasError() {
+		return fmt.Errorf("failed to get header: %v", resp.Error.Message)
+	}
+	header, err := block3.NewBlockHeaderFromRPC(&resp.Result)
+	if err != nil {
+		return err
+	}
+	buf := io3.NewBufBinaryWriter()
+	header.Serialize(buf.BinaryWriter)
+	if buf.Err != nil {
+		return buf.Err
+	}
+
+	poly := poly_go_sdk.NewPolySdk()
+	polyRpcAddr, err := cmd.Flags().GetString(PolyRpcAddr)
+	if err != nil {
+		return err
+	}
+	if err := SetUpPoly(poly, polyRpcAddr); err != nil {
+		return err
+	}
+	tx, err := poly.Native.Hs.NewSyncGenesisHeaderTransaction(id, buf.Bytes())
+	if err != nil {
+		return err
+	}
+
+	pubKeys, err := GetConsensusPublicKeys(cmd)
+	if err != nil {
+		return err
+	}
+
+	tx.Sigs = append(tx.Sigs, types.Sig{
+		SigData: make([][]byte, 0),
+		M:       uint16(len(pubKeys) - (len(pubKeys)-1)/3),
+		PubKeys: pubKeys,
+	})
+	sink := common.NewZeroCopySink(nil)
+	if err := tx.Serialization(sink); err != nil {
+		return err
+	}
+
+	fmt.Printf("raw transaction is %s\nNeed to send this transaction to every single consensus peer to sign. \n",
+		hex.EncodeToString(sink.Bytes()))
+	return nil
+}
+
 func SignPolyMultiSigTx(cmd *cobra.Command, args []string) error {
 	poly, accs, err := GetPolyAndAccsByCmd(cmd)
 	if err != nil {
@@ -1277,26 +1341,26 @@ func SignPolyMultiSigTx(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func SyncPolyHdrToSwitcheo(cmd *cobra.Command, args []string) error {
-	swthRpc, err := cmd.Flags().GetString(SwitcheoRpcAddr)
+func SyncPolyHdrToCarbon(cmd *cobra.Command, args []string) error {
+	carbonRpc, err := cmd.Flags().GetString(CarbonRpcAddr)
 	if err != nil {
 		return err
 	}
-	swthWallet, err := cmd.Flags().GetString(SwitcheoWallet)
+	carbonWallet, err := cmd.Flags().GetString(CarbonWallet)
 	if err != nil {
 		return err
 	}
-	swthPwd, err := cmd.Flags().GetString(SwitcheoWalletPwd)
+	carbonPwd, err := cmd.Flags().GetString(CarbonWalletPwd)
 	if err != nil {
 		return err
 	}
-	if swthPwd == "" {
-		fmt.Println("Pleasae input your switcheo wallet password...")
+	if carbonPwd == "" {
+		fmt.Println("Pleasae input your carbon wallet password...")
 		pwd, err := password.GetPassword()
 		if err != nil {
 			return fmt.Errorf("getPassword error: %v", err)
 		}
-		swthPwd = string(pwd)
+		carbonPwd = string(pwd)
 	}
 	polyRpc, err := cmd.Flags().GetString(PolyRpcAddr)
 	if err != nil {
@@ -1319,7 +1383,7 @@ func SyncPolyHdrToSwitcheo(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cli, err := http.New(swthRpc, "/websocket")
+	cli, err := http.New(carbonRpc, "/websocket")
 	if err != nil {
 		return err
 	}
@@ -1331,7 +1395,7 @@ func SyncPolyHdrToSwitcheo(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	cdc := NewCodec()
-	acc, err := NewCosmosAcc(swthWallet, swthPwd, cli, cdc)
+	acc, err := NewCosmosAcc(carbonWallet, carbonPwd, cli, cdc)
 	if err != nil {
 		return err
 	}
@@ -1343,10 +1407,10 @@ func SyncPolyHdrToSwitcheo(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	WaitSwitcheoTx(res.Hash, cli)
+	WaitCarbonTx(res.Hash, cli)
 
 	hash := hdr.Hash()
-	fmt.Printf("successful to sync poly header (hash: %s, height: %d) to Switcheo: (swth_txhash: %s, acc_seq: %d)\n",
+	fmt.Printf("successful to sync poly header (hash: %s, height: %d) to Carbon: (carbon_txhash: %s, acc_seq: %d)\n",
 		hash.ToHexString(), hdr.Height, res.Hash.String(), seq)
 
 	return nil
