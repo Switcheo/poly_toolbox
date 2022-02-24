@@ -558,7 +558,11 @@ func RegisterSideChain(cmd *cobra.Command, args []string) error {
 	if extra == "" {
 		txhash, err = poly.Native.Scm.RegisterSideChain(acc.Address, chainId, router, name, num, cmccAddr, acc)
 	} else {
-		txhash, err = poly.Native.Scm.RegisterSideChainExt(acc.Address, chainId, router, name, num, cmccAddr, []byte(extra), acc)
+		extraBytes, err := hex.DecodeString(extra)
+		if err != nil {
+			return err
+		}
+		txhash, err = poly.Native.Scm.RegisterSideChainExt(acc.Address, chainId, router, name, num, cmccAddr, extraBytes, acc)
 	}
 	if err != nil {
 		return err
@@ -643,7 +647,11 @@ func UpdateSideChain(cmd *cobra.Command, args []string) error {
 	if extra == "" {
 		txhash, err = poly.Native.Scm.UpdateSideChain(acc.Address, chainId, router, name, num, cmccAddr, acc)
 	} else {
-		txhash, err = poly.Native.Scm.UpdateSideChainExt(acc.Address, chainId, router, name, num, cmccAddr, []byte(extra), acc)
+		extraBytes, err := hex.DecodeString(extra)
+		if err != nil {
+			return err
+		}
+		txhash, err = poly.Native.Scm.UpdateSideChainExt(acc.Address, chainId, router, name, num, cmccAddr, extraBytes, acc)
 	}
 	if err != nil {
 		return err
