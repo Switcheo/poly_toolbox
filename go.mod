@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/cosmos/cosmos-sdk v0.39.1
-	github.com/ethereum/go-ethereum v1.9.25
+	github.com/ethereum/go-ethereum v1.10.16
 	github.com/joeqian10/neo-gogogo v1.3.0
 	github.com/joeqian10/neo3-gogogo v1.1.2
 	github.com/ontio/ontology-crypto v1.0.9
